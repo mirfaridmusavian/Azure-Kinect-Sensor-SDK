@@ -1,15 +1,22 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+# Find librealsense2 installed package
+# find_package(realsense2 REQUIRED)
+find_package(OpenCV REQUIRED)
 
 add_executable(mrob_recorder
     main.cpp 
     recorder.cpp 
     ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
+    
+target_include_directories(mrob_recorder PUBLIC "/usr/local/include/opencv4/")
 
 target_link_libraries(mrob_recorder PRIVATE
     k4a::k4a
     k4a::k4arecord
+    # ${realsense2_LIBRARY}
+    ${OpenCV_LIBS}
 )
 
 # Include ${CMAKE_CURRENT_BINARY_DIR}/version.rc in the target's sources

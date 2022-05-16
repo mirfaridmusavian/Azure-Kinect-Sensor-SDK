@@ -13,7 +13,14 @@
 
 #include <stdio.h>
 
+// #include <librealsense2/rs.hpp>
+
+#include <opencv2/opencv.hpp>
+
+#include <fstream>
+
 using namespace std::chrono;
+using namespace std;
 
 inline static uint32_t k4a_convert_fps_to_uint(k4a_fps_t fps)
 {
@@ -203,6 +210,7 @@ int do_recording(uint8_t device_index,
     fprintf(fpt, "color_ts_us,depth_ts_us,global_ts_us\n");
     ////////////////////////////////////
 
+    int frame_number = 0;
     do
     {
         result = k4a_device_get_capture(device, &capture, timeout_ms);
@@ -223,6 +231,16 @@ int do_recording(uint8_t device_index,
         k4a_image_t color_image = k4a_capture_get_color_image(capture);
         k4a_image_t depth_image = k4a_capture_get_depth_image(capture);
 
+        if (frame_number % 60 == 0 && color_image != NULL) {
+            uint8_t* image_buffer = k4a_image_get_buffer(color_image);
+            size_t image_buffer_size = k4a_image_get_size(color_image);
+
+            char rgbname[50];
+            sprintf(rgbname, "color_preview/%08d_color.jpg", frame_number);
+            std::ofstream file_object(rgbname, std::ios::out | std::ios::binary);
+            file_object.write(reinterpret_cast<char*>(image_buffer), image_buffer_size);
+            file_object.close();
+        }
 
         if (color_image && depth_image) {
 
@@ -292,6 +310,7 @@ int do_recording(uint8_t device_index,
             } while (!exiting && result != K4A_WAIT_RESULT_FAILED &&
                      (recording_length < 0 || (steady_clock::now() - recording_start < recording_length_seconds)));
         }
+        frame_number++;
     } while (!exiting && result != K4A_WAIT_RESULT_FAILED &&
              (recording_length < 0 || (steady_clock::now() - recording_start < recording_length_seconds)));
 
